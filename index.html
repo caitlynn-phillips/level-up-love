@@ -6,67 +6,97 @@
   <title>Level Up Love</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; overflow: hidden; background: #111; color: #fff; font-family: 'Press Start 2P', cursive; }
-    canvas { display: block; margin: 0 auto; background: #000; }
+    html, body {
+      height: 100%;
+      background: #111;
+      color: #fff;
+      font-family: 'Press Start 2P', cursive;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    canvas {
+      background: #000;
+      max-width: 100%;
+      height: auto;
+      border: 2px solid #fff;
+    }
+
     #message {
       position: absolute;
-      top: 30%;
+      top: 20%;
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      font-size: 18px;
-      background: rgba(0, 0, 0, 0.8);
+      font-size: 14px;
+      background: rgba(0, 0, 0, 0.85);
       padding: 2rem;
       border-radius: 10px;
+      width: 90%;
       display: none;
     }
+
     #message p {
-      margin-bottom: 15px; /* Add space between the sentences */
+      margin-bottom: 1rem;
     }
-    #message h2 {
-      margin-top: 20px; /* Add space above the question */
-    }
-    #buttons {
-      margin-top: 20px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
+
     #yesButton, #noButton {
-      padding: 0.5rem 1rem;
+      margin: 0.5rem;
+      padding: 0.6rem 1.2rem;
       font-size: 14px;
       background-color: #0f0;
       color: #000;
       border: none;
-      cursor: pointer;
       border-radius: 5px;
+      cursor: pointer;
     }
+
     #noButton {
-      background-color: #f00;
+      background-color: #f33;
+      color: #fff;
+    }
+
+    @media (min-width: 768px) {
+      #message {
+        font-size: 16px;
+        width: 400px;
+      }
+
+      #yesButton, #noButton {
+        font-size: 16px;
+      }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <canvas id="gameCanvas"></canvas>
+
   <div id="message">
-    <p>You've certainly captured my heart ❤️</p>
+    <p>Well, you've certainly captured my heart ❤️</p>
     <p>You've reached the final level...</p>
     <p>There's only one more challenge left:</p>
     <h2>Will you marry me?</h2>
-    <div id="buttons">
-      <button id="yesButton">YES!!!</button>
-      <button id="noButton">NO</button>
-    </div>
+    <button id="yesButton">YES!!!</button>
+    <button id="noButton">Not Yet 😅</button>
   </div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
     const player = {
       x: 50,
-      y: canvas.height - 70,
+      y: canvas.height - 100,
       radius: 20,
       color: '#0ff',
       speed: 5,
@@ -75,8 +105,8 @@
     };
 
     const goal = {
-      x: canvas.width - 100,
-      y: canvas.height - 70,
+      x: canvas.width - 80,
+      y: canvas.height - 100,
       width: 40,
       height: 40,
       color: '#f0f'
@@ -93,10 +123,9 @@
       speed: 0.5 + Math.random()
     }));
 
-    // Place hearts in random positions
     for (let i = 0; i < totalHearts; i++) {
       hearts.push({
-        x: 100 + i * 120,
+        x: 100 + i * 100,
         y: 100 + Math.random() * 200,
         size: 20,
         collected: false
@@ -112,23 +141,20 @@
       if (keys['ArrowUp']) player.y -= player.speed;
       if (keys['ArrowDown']) player.y += player.speed;
 
-      // Prevent player from moving outside the canvas
       player.x = Math.max(0, Math.min(canvas.width - player.radius * 2, player.x));
       player.y = Math.max(0, Math.min(canvas.height - player.radius * 2, player.y));
 
-      // Check if the player has collected a heart
       hearts.forEach(heart => {
         if (!heart.collected &&
-          player.x < heart.x + heart.size &&
-          player.x + player.radius * 2 > heart.x &&
-          player.y < heart.y + heart.size &&
-          player.y + player.radius * 2 > heart.y) {
+            player.x < heart.x + heart.size &&
+            player.x + player.radius * 2 > heart.x &&
+            player.y < heart.y + heart.size &&
+            player.y + player.radius * 2 > heart.y) {
           heart.collected = true;
           collectedHearts++;
         }
       });
 
-      // Check if the player has collected all hearts and reached the goal
       if (
         collectedHearts >= totalHearts &&
         player.x < goal.x + goal.width &&
@@ -140,6 +166,9 @@
       }
 
       player.frameCount++;
+      if (player.frameCount % 10 === 0) {
+        player.mouthOpen = !player.mouthOpen;
+      }
     }
 
     function drawStars() {
@@ -158,7 +187,6 @@
       });
     }
 
-    // Draw Pac-Man (player) with mouth animation
     function drawPacMan(x, y, radius, mouthOpen, color) {
       const angle = mouthOpen ? 0.3 : 0.05;
       ctx.beginPath();
@@ -169,39 +197,33 @@
       ctx.fill();
     }
 
-    // Draw hearts
     function drawHeart(x, y, size) {
+      ctx.fillStyle = 'red';
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.arc(x - size / 2, y - size / 2, size / 2, Math.PI, 0, false);
-      ctx.arc(x + size / 2, y - size / 2, size / 2, Math.PI, 0, false);
-      ctx.lineTo(x, y + size);
-      ctx.closePath();
-      ctx.fillStyle = 'red';
+      ctx.bezierCurveTo(x, y - size / 2, x - size, y - size / 2, x - size, y);
+      ctx.bezierCurveTo(x - size, y + size, x, y + size * 1.5, x, y + size * 2);
+      ctx.bezierCurveTo(x, y + size * 1.5, x + size, y + size, x + size, y);
+      ctx.bezierCurveTo(x + size, y - size / 2, x, y - size / 2, x, y);
       ctx.fill();
     }
 
     function draw() {
       drawStars();
+      drawPacMan(player.x, player.y, player.radius, player.mouthOpen, player.color);
 
-      // Draw collected hearts
       hearts.forEach(heart => {
         if (!heart.collected) {
           drawHeart(heart.x, heart.y, heart.size);
         }
       });
 
-      // Draw goal area
       ctx.fillStyle = goal.color;
       ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
 
-      // Draw Pac-Man
-      drawPacMan(player.x, player.y, player.radius, player.mouthOpen, player.color);
-
-      // Display collected hearts count
       ctx.fillStyle = '#fff';
       ctx.font = '12px Press Start 2P';
-      ctx.fillText(`Hearts: ${collectedHearts}/${totalHearts}`, 20, 20);
+      ctx.fillText(`Hearts: ${collectedHearts}/${totalHearts}`, 20, 30);
     }
 
     function loop() {
@@ -213,16 +235,11 @@
     loop();
 
     document.getElementById('yesButton').addEventListener('click', () => {
-      // Redirect to your Google Form after clicking YES
-      window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSfhafhOppCBjsps621vpO1n8jtMX2pAZozxvdW-bYQQixgEXg/viewform?usp=sharing"; 
-
-      document.getElementById('message').innerHTML = '<h2>He said YES! 🎮💍❤️</h2>';
+      window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSfhafhOppCBjsps621vpO1n8jtMX2pAZozxvdW-bYQQixgEXg/viewform?usp=sharing";
     });
 
     document.getElementById('noButton').addEventListener('click', () => {
-    
-      alert("Maybe next time!");
-      document.getElementById('message').style.display = 'none'; // Hide message on "NO"
+      alert("Aww, maybe another level? ❤️");
     });
   </script>
 </body>
