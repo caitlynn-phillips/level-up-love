@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Level Up Love</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #111; color: #fff; font-family: 'Press Start 2P', cursive; }
+    canvas { display: block; margin: 0 auto; background: #000; }
+    #message {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 18px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 2rem;
+      border-radius: 10px;
+      display: none;
+    }
+    #message p {
+      margin-bottom: 15px; /* Add space between the sentences */
+    }
+    #message h2 {
+      margin-top: 20px; /* Add space above the question */
+    }
+    #buttons {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    #yesButton, #noButton {
+      padding: 0.5rem 1rem;
+      font-size: 14px;
+      background-color: #0f0;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #noButton {
+      background-color: #f00;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <div id="message">
+    <p>You've certainly captured my heart ❤️</p>
+    <p>You've reached the final level...</p>
+    <p>There's only one more challenge left:</p>
+    <h2>Will you marry me?</h2>
+    <div id="buttons">
+      <button id="yesButton">YES!!!</button>
+      <button id="noButton">NO</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const player = {
+      x: 50,
+      y: canvas.height - 70,
+      radius: 20,
+      color: '#0ff',
+      speed: 5,
+      mouthOpen: true,
+      frameCount: 0
+    };
+
+    const goal = {
+      x: canvas.width - 100,
+      y: canvas.height - 70,
+      width: 40,
+      height: 40,
+      color: '#f0f'
+    };
+
+    const hearts = [];
+    const totalHearts = 5;
+    let collectedHearts = 0;
+    let keys = {};
+    let stars = Array.from({ length: 100 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 1.5,
+      speed: 0.5 + Math.random()
+    }));
+
+    // Place hearts in random positions
+    for (let i = 0; i < totalHearts; i++) {
+      hearts.push({
+        x: 100 + i * 120,
+        y: 100 + Math.random() * 200,
+        size: 20,
+        collected: false
+      });
+    }
+
+    window.addEventListener('keydown', (e) => keys[e.key] = true);
+    window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+    function update() {
+      if (keys['ArrowRight']) player.x += player.speed;
+      if (keys['ArrowLeft']) player.x -= player.speed;
+      if (keys['ArrowUp']) player.y -= player.speed;
+      if (keys['ArrowDown']) player.y += player.speed;
+
+      // Prevent player from moving outside the canvas
+      player.x = Math.max(0, Math.min(canvas.width - player.radius * 2, player.x));
+      player.y = Math.max(0, Math.min(canvas.height - player.radius * 2, player.y));
+
+      // Check if the player has collected a heart
+      hearts.forEach(heart => {
+        if (!heart.collected &&
+          player.x < heart.x + heart.size &&
+          player.x + player.radius * 2 > heart.x &&
+          player.y < heart.y + heart.size &&
+          player.y + player.radius * 2 > heart.y) {
+          heart.collected = true;
+          collectedHearts++;
+        }
+      });
+
+      // Check if the player has collected all hearts and reached the goal
+      if (
+        collectedHearts >= totalHearts &&
+        player.x < goal.x + goal.width &&
+        player.x + player.radius * 2 > goal.x &&
+        player.y < goal.y + goal.height &&
+        player.y + player.radius * 2 > goal.y
+      ) {
+        document.getElementById('message').style.display = 'block';
+      }
+
+      player.frameCount++;
+    }
+
+    function drawStars() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+    }
+
+    // Draw Pac-Man (player) with mouth animation
+    function drawPacMan(x, y, radius, mouthOpen, color) {
+      const angle = mouthOpen ? 0.3 : 0.05;
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y + radius);
+      ctx.arc(x + radius, y + radius, radius, angle, Math.PI * 2 - angle);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    // Draw hearts
+    function drawHeart(x, y, size) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.arc(x - size / 2, y - size / 2, size / 2, Math.PI, 0, false);
+      ctx.arc(x + size / 2, y - size / 2, size / 2, Math.PI, 0, false);
+      ctx.lineTo(x, y + size);
+      ctx.closePath();
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    }
+
+    function draw() {
+      drawStars();
+
+      // Draw collected hearts
+      hearts.forEach(heart => {
+        if (!heart.collected) {
+          drawHeart(heart.x, heart.y, heart.size);
+        }
+      });
+
+      // Draw goal area
+      ctx.fillStyle = goal.color;
+      ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+
+      // Draw Pac-Man
+      drawPacMan(player.x, player.y, player.radius, player.mouthOpen, player.color);
+
+      // Display collected hearts count
+      ctx.fillStyle = '#fff';
+      ctx.font = '12px Press Start 2P';
+      ctx.fillText(`Hearts: ${collectedHearts}/${totalHearts}`, 20, 20);
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+
+    document.getElementById('yesButton').addEventListener('click', () => {
+      // Redirect to your Google Form after clicking YES
+      window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSfhafhOppCBjsps621vpO1n8jtMX2pAZozxvdW-bYQQixgEXg/viewform?usp=sharing"; 
+
+      // Show engagement message before redirect
+      document.getElementById('message').innerHTML = '<h2>He said YES! 🎮💍❤️</h2>';
+    });
+
+    document.getElementById('noButton').addEventListener('click', () => {
+      // Handle the "NO" action, like closing the message or redirecting
+      alert("Maybe next time!");
+      document.getElementById('message').style.display = 'none'; // Hide message on "NO"
+    });
+  </script>
+</body>
+</html>
