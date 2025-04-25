@@ -216,12 +216,11 @@
       // Redirect to your Google Form after clicking YES
       window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSfhafhOppCBjsps621vpO1n8jtMX2pAZozxvdW-bYQQixgEXg/viewform?usp=sharing"; 
 
-      // Show engagement message before redirect
       document.getElementById('message').innerHTML = '<h2>He said YES! 🎮💍❤️</h2>';
     });
 
     document.getElementById('noButton').addEventListener('click', () => {
-      // Handle the "NO" action, like closing the message or redirecting
+    
       alert("Maybe next time!");
       document.getElementById('message').style.display = 'none'; // Hide message on "NO"
     });
